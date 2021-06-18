@@ -6,7 +6,7 @@ from django.conf import settings
 from . import views
 
 urlpatterns = [
-    url(r'^yearbook$', views.comingsoon, name='yearbook'),    
+    url(r'^yearbook$', views.yearbook, name='yearbook'),    
     #url(r'^$', views.index, name='index'),
     url(r'^logout/$', views.userlogout, name='logout'),
     url(r'^changePassword$', views.changePassword, name='changePassword'),

@@ -60,58 +60,62 @@ def index(request):
     #             return render(request, 'myapp/index.html',{'error_string':'Not found'})
 
 
-    # if request.method == 'POST':
-    #     return redirect(os.environ["authLinkPart1"] + os.environ["CLIENT_ID"] + os.environ["authLinkPart2"])
+    if request.method == 'POST':
+        return redirect(os.environ["authLinkPart1"] + os.environ["CLIENT_ID"] + os.environ["authLinkPart2"])
     return render(request, 'myapp/index.html')
     # return render(request, 'myapp/index.html')
 
 
-# def authenticate(request):
-#     # PostData = {'client_id': config.CLIENT_ID,
-#     # 'client_secret': config.CLIENT_SECRET,
-#     # 'grant_type': config.AUTHORIZATION_CODE,
-#     # 'code': request.GET.get('code')}
-#     PostData = {'client_id': os.environ["CLIENT_ID"],
-#     'client_secret': os.environ["CLIENT_SECRET"],
-#     'grant_type': os.environ["AUTHORIZATION_CODE"],
-#     'code': request.GET.get('code')}
-#     print("###")
+def authenticate(request):
+    # PostData = {'client_id': config.CLIENT_ID,
+    # 'client_secret': config.CLIENT_SECRET,
+    # 'grant_type': config.AUTHORIZATION_CODE,
+    # 'code': request.GET.get('code')}
+    PostData = {'client_id': os.environ["CLIENT_ID"],
+    'client_secret': os.environ["CLIENT_SECRET"],
+    'grant_type': os.environ["AUTHORIZATION_CODE"],
+    'code': request.GET.get('code')}
+    print("post data")
 
-#     r = requests.post(os.environ["OauthTokenURL"], PostData, verify=os.environ["certiPath"])
-#     a = r.json()
-#     access_token = a['access_token']
-#     PostData2 = {
-#         'access_token': access_token
-#     }
-#     r1 = requests.post(os.environ["ResourceURL"], PostData2, verify=os.environ["certiPath"])
-#     b = r1.json()
+    r = requests.post(os.environ["OauthTokenURL"], PostData, verify=os.environ["certiPath"])
+    a = r.json()
+    access_token = a['access_token']
+    PostData2 = {
+        'access_token': access_token
+    }
+    r1 = requests.post(os.environ["ResourceURL"], PostData2, verify=os.environ["certiPath"])
+    b = r1.json()
 
-#     if User.objects.filter(username=(b['uniqueiitdid']).lower()).exists():
-#         myUser = User.objects.get(username=(b['uniqueiitdid']).lower())
-#         login(request, myUser)
-#         return redirect('/profile')
-#     else:
-#         # return redirect('/')
-#         return render(request, 'myapp/index.html', {"error_string": "You are unauthorized to access"})
-#         # return HttpResponse('Unauthorized to access')
-#     # myUser = User.objects.get(username=('mayank').lower())
-#     # login(request, myUser)
-#     # return redirect('/profile')
+    if User.objects.filter(username=(b['uniqueiitdid']).lower()).exists():
+        myUser = User.objects.get(username=(b['uniqueiitdid']).lower())
+        print(myUser)
+        login(request, myUser)
+        return redirect('/profile')
+    else:
+        # return redirect('/')
+        return render(request, 'myapp/index.html', {"error_string": "You are unauthorized to access"})
+        # return HttpResponse('Unauthorized to access')
+    # myUser = User.objects.get(username=('mayank').lower())
+    # login(request, myUser)
+    # return redirect('/profile')
 
 # @login_required()
 def profile(request):
     email = request.user.email
-    exceptions = ['subodh.verma.min19@itbhu.ac.in',]
-    if request.user.is_superuser:
-        return HttpResponse('super users not allowed')
-    #if not(re.findall("15@", email) or re.findall("16@", email)) and not(email in exceptions):
+    print(email)
+    print("InProfile")
+    exceptions = ['subodh.verma.min19@itbhu.ac.in','vidya.bhushan.che19@itbhu.ac.in']
+    # if request.user.is_superuser:
+    #     return HttpResponse('super users not allowed')
+    # if not(re.findall("15@", email) or re.findall("16@", email)) and not(email in exceptions):
     #    user = User.objects.get(email=email)
     #    user.delete()
-    #    return redirect('logout')
+    #    return redirect('logout') 
     try:
         u = request.user.student
+        print(u)
     except:
-        IDDyear = "15"
+        IDDyear = "19"
         query = r"(?<=\.)(.*)(?=\@)"
         branch = str(re.search(r"(?<=\.)(.*)(?=\@)", email).group(0))[-5:-2]
         if(IDDyear+"@" in email):
@@ -120,10 +124,12 @@ def profile(request):
                 logging.info(email)
             except:
                 pass
-            return redirect('logout')
+            # return redirect('logout')
             branch += "-idd"
         u = Student(name=request.user.first_name, user=request.user, email=request.user.email, department=branch)
         u.save()
+    # u = Student(name=request.user.first_name, user=request.user, email=request.user.email)
+    # u.save()
     if request.method == 'GET':
         context = {"user": u}
         return render(request, 'myapp/profile.html', context)
@@ -218,10 +224,13 @@ def poll(request):
     if request.method == 'GET':
         users_all = User.objects.filter(is_superuser=False)
         # Same dept users
-        dept_users = users_all.filter(student__department=u.student.department)
+        # dept_users = users_all.filter(student__department=u.student.department)
+        dept_users = users_all.all()
 
-        allPolls = Poll.objects.filter(department="all")
-        deptPolls = Poll.objects.filter(department=u.student.department)
+        # allPolls = Poll.objects.filter(department="all")
+        # deptPolls = Poll.objects.filter(department=u.student.department)
+        allPolls = Poll.objects.all()
+        deptPolls = Poll.objects.all()
 
         gen_allPolls = get_poll_display(allPolls, VotesDisplay)
         gen_deptPolls = get_poll_display(deptPolls, VotesDisplay)
@@ -270,7 +279,7 @@ def poll(request):
 # @login_required()
 def comment(request):
     u = request.user
-    users_all = User.objects.filter(is_superuser=False)
+    users_all = User.objects.all()
         # we pass this to display options, remove self user
     myComments = u.student.CommentsIWrite
     gen_comments = []
@@ -396,7 +405,8 @@ def yearbook(request):
     else:
         departmentN = "all"
     GenQuestions = GenQuestion.objects.all()
-    students_dep = Student.objects.filter(department=dep)
+    # students_dep = Student.objects.filter(department=dep)
+    students_dep = Student.objects.all()
     for i in students_dep:
         gen_GenQuestions=list([])
         for q in GenQuestions:
@@ -422,7 +432,8 @@ def yearbook(request):
         i.CommentsIGet=list(gen_commentsIGet)
 
     all_polls=[]
-    for p in Poll.objects.filter(department="all"):
+    # for p in Poll.objects.filter(department="all"):
+    for p in Poll.objects.all():
         tmpVotes = []
         for (person,count) in p.votes.items():
             Person=""
@@ -435,7 +446,8 @@ def yearbook(request):
         if ind!=0:
             all_polls.append([p.poll,tmpVotes[0:ind]])
     dep_polls=[]
-    for p in Poll.objects.filter(department=dep):
+    # for p in Poll.objects.filter(department=dep):
+    for p in Poll.objects.all():
         tmpVotes = []
         for (person,count) in p.votes.items():
             Person=""
@@ -458,3 +470,4 @@ def userlogout(request):
 
 def comingsoon(request):
     return render(request, 'myapp/comingsoon.html')
+
